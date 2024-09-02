@@ -3,14 +3,14 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'dueDate' : IDL.Text,
     'isOverdue' : IDL.Bool,
-    'category' : IDL.Text,
   });
-  const CategoryTasks = IDL.Record({
+  const Category = IDL.Record({
     'tasks' : IDL.Vec(Task),
-    'category' : IDL.Text,
+    'icon' : IDL.Text,
+    'name' : IDL.Text,
   });
   return IDL.Service({
-    'getTasksByCategory' : IDL.Func([], [IDL.Vec(CategoryTasks)], ['query']),
+    'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
   });
 };
 export const init = ({ IDL }) => { return []; };

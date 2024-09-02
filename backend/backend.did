@@ -1,15 +1,15 @@
 type Task = 
  record {
-   category: text;
    dueDate: text;
    isOverdue: bool;
    title: text;
  };
-type CategoryTasks = 
+type Category = 
  record {
-   category: text;
+   icon: text;
+   name: text;
    tasks: vec Task;
  };
 service : {
-  getTasksByCategory: () -> (vec CategoryTasks) query;
+  getCategories: () -> (vec Category) query;
 }
