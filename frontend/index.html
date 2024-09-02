@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categorized Task List - v0 Style</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
@@ -69,6 +72,35 @@
             color: #b91c1c;
         }
         
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+        }
+        
+        .btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: #2563eb;
+        }
+        
         @media (max-width: 640px) {
             .task-item {
                 flex-direction: column;
@@ -82,66 +114,152 @@
     </style>
 </head>
 <body>
-    <h2>
-        <i data-feather="package" class="category-icon"></i>
-        GEMS
-    </h2>
-    <ul class="task-list">
-        <li class="task-item">
-            <span class="task-name">Implement generous freemium model</span>
-            <span class="due-date">Sep 15, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Complete Web IDE integration</span>
-            <span class="due-date">Oct 1, 2024</span>
-        </li>
-    </ul>
+    <div id="root"></div>
 
-    <h2>
-        <i data-feather="code" class="category-icon"></i>
-        Web IDE
-    </h2>
-    <ul class="task-list">
-        <li class="task-item">
-            <span class="task-name">Develop build & debug features</span>
-            <span class="due-date">Sep 20, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Create Sample App Carousel</span>
-            <span class="due-date">Sep 30, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Advertise on every technical documentation page</span>
-            <span class="due-date">Oct 10, 2024</span>
-        </li>
-    </ul>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    <h2>
-        <i data-feather="globe" class="category-icon"></i>
-        OISY
-    </h2>
-    <ul class="task-list">
-        <li class="task-item">
-            <span class="task-name">Launch Airdrop campaign</span>
-            <span class="due-date overdue">Aug 31, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Implement Signer Standard</span>
-            <span class="due-date">Sep 25, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Ensure destination compatibility</span>
-            <span class="due-date">Oct 5, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Optimize DEX Liquidity</span>
-            <span class="due-date">Oct 15, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Implement Subsidized DEX Yield</span>
-            <span class="due-date">Oct 30, 2024</span>
-        </li>
-    </ul>
+        function App() {
+            const [categories, setCategories] = useState([]);
+            const [newCategory, setNewCategory] = useState({ name: '', icon: '' });
+            const [newTask, setNewTask] = useState({ categoryId: '', title: '', dueDate: '' });
+
+            useEffect(() => {
+                fetchCategories();
+            }, []);
+
+            async function fetchCategories() {
+                try {
+                    const result = await window.canister.getCategories();
+                    setCategories(result);
+                } catch (error) {
+                    console.error('Error fetching categories:', error);
+                }
+            }
+
+            async function handleAddCategory(e) {
+                e.preventDefault();
+                try {
+                    await window.canister.addCategory(newCategory.name, newCategory.icon);
+                    setNewCategory({ name: '', icon: '' });
+                    fetchCategories();
+                } catch (error) {
+                    console.error('Error adding category:', error);
+                }
+            }
+
+            async function handleAddTask(e) {
+                e.preventDefault();
+                try {
+                    const dueDate = new Date(newTask.dueDate).getTime() * 1000000; // Convert to nanoseconds
+                    await window.canister.addTask(Number(newTask.categoryId), newTask.title, dueDate);
+                    setNewTask({ categoryId: '', title: '', dueDate: '' });
+                    fetchCategories();
+                } catch (error) {
+                    console.error('Error adding task:', error);
+                }
+            }
+
+            async function handleEditTaskDate(categoryId, taskId, newDate) {
+                try {
+                    const newDueDate = new Date(newDate).getTime() * 1000000; // Convert to nanoseconds
+                    await window.canister.editTaskDate(categoryId, taskId, newDueDate);
+                    fetchCategories();
+                } catch (error) {
+                    console.error('Error editing task date:', error);
+                }
+            }
+
+            return (
+                <div>
+                    <h1>Task Manager</h1>
+                    
+                    <h2>Add New Category</h2>
+                    <form onSubmit={handleAddCategory}>
+                        <div className="form-group">
+                            <label>Name:</label>
+                            <input 
+                                type="text" 
+                                value={newCategory.name} 
+                                onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Icon:</label>
+                            <input 
+                                type="text" 
+                                value={newCategory.icon} 
+                                onChange={(e) => setNewCategory({...newCategory, icon: e.target.value})}
+                                required
+                            />
+                        </div>
+                        <button type="submit" className="btn">Add Category</button>
+                    </form>
+
+                    <h2>Add New Task</h2>
+                    <form onSubmit={handleAddTask}>
+                        <div className="form-group">
+                            <label>Category:</label>
+                            <select 
+                                value={newTask.categoryId} 
+                                onChange={(e) => setNewTask({...newTask, categoryId: e.target.value})}
+                                required
+                            >
+                                <option value="">Select a category</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>{category.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Title:</label>
+                            <input 
+                                type="text" 
+                                value={newTask.title} 
+                                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Due Date:</label>
+                            <input 
+                                type="date" 
+                                value={newTask.dueDate} 
+                                onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+                                required
+                            />
+                        </div>
+                        <button type="submit" className="btn">Add Task</button>
+                    </form>
+
+                    {categories.map((category) => (
+                        <div key={category.id}>
+                            <h2>
+                                <i data-feather={category.icon} className="category-icon"></i>
+                                {category.name}
+                            </h2>
+                            <ul className="task-list">
+                                {category.tasks.map((task) => (
+                                    <li key={task.id} className="task-item">
+                                        <span className="task-name">{task.title}</span>
+                                        <input 
+                                            type="date" 
+                                            value={new Date(Number(task.dueDate) / 1000000).toISOString().split('T')[0]} 
+                                            onChange={(e) => handleEditTaskDate(category.id, task.id, e.target.value)}
+                                            className={`due-date ${task.isOverdue ? 'overdue' : ''}`}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
 
     <script>
         feather.replace();

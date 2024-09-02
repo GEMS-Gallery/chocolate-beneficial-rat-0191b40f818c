@@ -1,15 +1,20 @@
 type Task = 
  record {
-   dueDate: text;
+   dueDate: int;
+   id: nat;
    isOverdue: bool;
    title: text;
  };
 type Category = 
  record {
    icon: text;
+   id: nat;
    name: text;
    tasks: vec Task;
  };
 service : {
+  addCategory: (text, text) -> (nat);
+  addTask: (nat, text, int) -> (opt nat);
+  editTaskDate: (nat, nat, int) -> (bool);
   getCategories: () -> (vec Category) query;
 }
