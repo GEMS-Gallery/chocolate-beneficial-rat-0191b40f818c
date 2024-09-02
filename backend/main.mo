@@ -1,7 +1,10 @@
 import Bool "mo:base/Bool";
+import Hash "mo:base/Hash";
 
 import Array "mo:base/Array";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
+import HashMap "mo:base/HashMap";
 
 actor {
   type Task = {
@@ -9,6 +12,11 @@ actor {
     category: Text;
     dueDate: Text;
     isOverdue: Bool;
+  };
+
+  type CategoryTasks = {
+    category: Text;
+    tasks: [Task];
   };
 
   let tasks: [Task] = [
@@ -24,7 +32,19 @@ actor {
     { title = "Implement Subsidized DEX Yield"; category = "OISY"; dueDate = "Oct 30, 2024"; isOverdue = false }
   ];
 
-  public query func getTasks() : async [Task] {
-    tasks
+  public query func getTasksByCategory() : async [CategoryTasks] {
+    let categoryMap = HashMap.HashMap<Text, [Task]>(0, Text.equal, Text.hash);
+
+    for (task in tasks.vals()) {
+      let existingTasks = switch (categoryMap.get(task.category)) {
+        case null [];
+        case (?tasks) tasks;
+      };
+      categoryMap.put(task.category, Array.append(existingTasks, [task]));
+    };
+
+    Iter.toArray(Iter.map(categoryMap.entries(), func ((category, tasks) : (Text, [Task])) : CategoryTasks {
+      { category = category; tasks = tasks }
+    }))
   };
 }

@@ -5,6 +5,12 @@ export const idlFactory = ({ IDL }) => {
     'isOverdue' : IDL.Bool,
     'category' : IDL.Text,
   });
-  return IDL.Service({ 'getTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']) });
+  const CategoryTasks = IDL.Record({
+    'tasks' : IDL.Vec(Task),
+    'category' : IDL.Text,
+  });
+  return IDL.Service({
+    'getTasksByCategory' : IDL.Func([], [IDL.Vec(CategoryTasks)], ['query']),
+  });
 };
 export const init = ({ IDL }) => { return []; };

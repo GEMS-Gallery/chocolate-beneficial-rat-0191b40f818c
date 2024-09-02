@@ -5,6 +5,11 @@ type Task =
    isOverdue: bool;
    title: text;
  };
+type CategoryTasks = 
+ record {
+   category: text;
+   tasks: vec Task;
+ };
 service : {
-  getTasks: () -> (vec Task) query;
+  getTasksByCategory: () -> (vec CategoryTasks) query;
 }
