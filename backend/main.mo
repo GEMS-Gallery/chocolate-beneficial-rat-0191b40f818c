@@ -1,78 +1,30 @@
 import Bool "mo:base/Bool";
-import Hash "mo:base/Hash";
-import Option "mo:base/Option";
 
-import Time "mo:base/Time";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
-import Result "mo:base/Result";
-import HashMap "mo:base/HashMap";
-import Nat "mo:base/Nat";
 
 actor {
   type Task = {
-    id: Nat;
     title: Text;
     category: Text;
-    dueDate: Time.Time;
-    completed: Bool;
+    dueDate: Text;
+    isOverdue: Bool;
   };
 
-  stable var nextId: Nat = 0;
-  let taskMap = HashMap.HashMap<Nat, Task>(0, Nat.equal, Nat.hash);
-
-  public func addTask(title: Text, category: Text, dueDate: Time.Time) : async Result.Result<Nat, Text> {
-    let id = nextId;
-    nextId += 1;
-    let task: Task = {
-      id = id;
-      title = title;
-      category = category;
-      dueDate = dueDate;
-      completed = false;
-    };
-    taskMap.put(id, task);
-    #ok(id)
-  };
+  let tasks: [Task] = [
+    { title = "Implement generous freemium model"; category = "GEMS"; dueDate = "Sep 15, 2024"; isOverdue = false },
+    { title = "Complete Web IDE integration"; category = "GEMS"; dueDate = "Oct 1, 2024"; isOverdue = false },
+    { title = "Develop build & debug features"; category = "Web IDE"; dueDate = "Sep 20, 2024"; isOverdue = false },
+    { title = "Create Sample App Carousel"; category = "Web IDE"; dueDate = "Sep 30, 2024"; isOverdue = false },
+    { title = "Advertise on every technical documentation page"; category = "Web IDE"; dueDate = "Oct 10, 2024"; isOverdue = false },
+    { title = "Launch Airdrop campaign"; category = "OISY"; dueDate = "Aug 31, 2024"; isOverdue = true },
+    { title = "Implement Signer Standard"; category = "OISY"; dueDate = "Sep 25, 2024"; isOverdue = false },
+    { title = "Ensure destination compatibility"; category = "OISY"; dueDate = "Oct 5, 2024"; isOverdue = false },
+    { title = "Optimize DEX Liquidity"; category = "OISY"; dueDate = "Oct 15, 2024"; isOverdue = false },
+    { title = "Implement Subsidized DEX Yield"; category = "OISY"; dueDate = "Oct 30, 2024"; isOverdue = false }
+  ];
 
   public query func getTasks() : async [Task] {
-    Array.tabulate(taskMap.size(), func (i: Nat) : Task {
-      switch (taskMap.get(i)) {
-        case (?task) task;
-        case null {
-          {
-            id = 0;
-            title = "";
-            category = "";
-            dueDate = 0;
-            completed = false;
-          }
-        };
-      }
-    })
-  };
-
-  public func updateTask(id: Nat, title: ?Text, category: ?Text, dueDate: ?Time.Time, completed: ?Bool) : async Result.Result<(), Text> {
-    switch (taskMap.get(id)) {
-      case (?task) {
-        let updatedTask: Task = {
-          id = id;
-          title = Option.get(title, task.title);
-          category = Option.get(category, task.category);
-          dueDate = Option.get(dueDate, task.dueDate);
-          completed = Option.get(completed, task.completed);
-        };
-        taskMap.put(id, updatedTask);
-        #ok()
-      };
-      case null #err("Task not found")
-    }
-  };
-
-  public func deleteTask(id: Nat) : async Result.Result<(), Text> {
-    switch (taskMap.remove(id)) {
-      case (?_) #ok();
-      case null #err("Task not found")
-    }
+    tasks
   };
 }

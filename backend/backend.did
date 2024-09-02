@@ -1,25 +1,10 @@
-type Time = int;
 type Task = 
  record {
    category: text;
-   completed: bool;
-   dueDate: Time;
-   id: nat;
+   dueDate: text;
+   isOverdue: bool;
    title: text;
  };
-type Result_1 = 
- variant {
-   err: text;
-   ok: nat;
- };
-type Result = 
- variant {
-   err: text;
-   ok;
- };
 service : {
-  addTask: (text, text, Time) -> (Result_1);
-  deleteTask: (nat) -> (Result);
   getTasks: () -> (vec Task) query;
-  updateTask: (nat, opt text, opt text, opt Time, opt bool) -> (Result);
 }
