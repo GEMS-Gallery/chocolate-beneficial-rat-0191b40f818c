@@ -69,6 +69,35 @@
             color: #b91c1c;
         }
         
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+        }
+        
+        .btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: #2563eb;
+        }
+        
         @media (max-width: 640px) {
             .task-item {
                 flex-direction: column;
@@ -82,69 +111,129 @@
     </style>
 </head>
 <body>
-    <h2>
-        <i data-feather="package" class="category-icon"></i>
-        GEMS
-    </h2>
-    <ul class="task-list">
-        <li class="task-item">
-            <span class="task-name">Implement generous freemium model</span>
-            <span class="due-date">Sep 15, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Complete Web IDE integration</span>
-            <span class="due-date">Oct 1, 2024</span>
-        </li>
-    </ul>
+    <h1>Task Manager</h1>
+    
+    <div id="add-category-form">
+        <h2>Add New Category</h2>
+        <form id="category-form">
+            <div class="form-group">
+                <label for="category-name">Name:</label>
+                <input type="text" id="category-name" required>
+            </div>
+            <div class="form-group">
+                <label for="category-icon">Icon:</label>
+                <input type="text" id="category-icon" required>
+            </div>
+            <button type="submit" class="btn">Add Category</button>
+        </form>
+    </div>
 
-    <h2>
-        <i data-feather="code" class="category-icon"></i>
-        Web IDE
-    </h2>
-    <ul class="task-list">
-        <li class="task-item">
-            <span class="task-name">Develop build & debug features</span>
-            <span class="due-date">Sep 20, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Create Sample App Carousel</span>
-            <span class="due-date">Sep 30, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Advertise on every technical documentation page</span>
-            <span class="due-date">Oct 10, 2024</span>
-        </li>
-    </ul>
+    <div id="add-task-form">
+        <h2>Add New Task</h2>
+        <form id="task-form">
+            <div class="form-group">
+                <label for="task-category">Category:</label>
+                <select id="task-category" required></select>
+            </div>
+            <div class="form-group">
+                <label for="task-title">Title:</label>
+                <input type="text" id="task-title" required>
+            </div>
+            <div class="form-group">
+                <label for="task-due-date">Due Date:</label>
+                <input type="date" id="task-due-date" required>
+            </div>
+            <button type="submit" class="btn">Add Task</button>
+        </form>
+    </div>
 
-    <h2>
-        <i data-feather="globe" class="category-icon"></i>
-        OISY
-    </h2>
-    <ul class="task-list">
-        <li class="task-item">
-            <span class="task-name">Launch Airdrop campaign</span>
-            <span class="due-date overdue">Aug 31, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Implement Signer Standard</span>
-            <span class="due-date">Sep 25, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Ensure destination compatibility</span>
-            <span class="due-date">Oct 5, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Optimize DEX Liquidity</span>
-            <span class="due-date">Oct 15, 2024</span>
-        </li>
-        <li class="task-item">
-            <span class="task-name">Implement Subsidized DEX Yield</span>
-            <span class="due-date">Oct 30, 2024</span>
-        </li>
-    </ul>
+    <div id="categories-container"></div>
 
     <script>
-        feather.replace();
+        // Fetch categories and tasks from the backend
+        async function fetchCategories() {
+            try {
+                const response = await fetch('/api/getCategories');
+                const categories = await response.json();
+                renderCategories(categories);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        }
+
+        // Render categories and tasks
+        function renderCategories(categories) {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+            const categorySelect = document.getElementById('task-category');
+            categorySelect.innerHTML = '<option value="">Select a category</option>';
+
+            categories.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.innerHTML = `
+                    <h2>
+                        <i data-feather="${category.icon}" class="category-icon"></i>
+                        ${category.name}
+                    </h2>
+                    <ul class="task-list">
+                        ${category.tasks.map(task => `
+                            <li class="task-item">
+                                <span class="task-name">${task.title}</span>
+                                <span class="due-date ${task.isOverdue ? 'overdue' : ''}">${new Date(Number(task.dueDate) / 1000000).toDateString()}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                container.appendChild(categoryElement);
+
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
+
+            feather.replace();
+        }
+
+        // Add new category
+        document.getElementById('category-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('category-name').value;
+            const icon = document.getElementById('category-icon').value;
+            try {
+                await fetch('/api/addCategory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, icon })
+                });
+                fetchCategories();
+                e.target.reset();
+            } catch (error) {
+                console.error('Error adding category:', error);
+            }
+        });
+
+        // Add new task
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const categoryId = document.getElementById('task-category').value;
+            const title = document.getElementById('task-title').value;
+            const dueDate = new Date(document.getElementById('task-due-date').value).getTime() * 1000000;
+            try {
+                await fetch('/api/addTask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categoryId: Number(categoryId), title, dueDate })
+                });
+                fetchCategories();
+                e.target.reset();
+            } catch (error) {
+                console.error('Error adding task:', error);
+            }
+        });
+
+        // Initial fetch of categories and tasks
+        fetchCategories();
     </script>
 </body>
 </html>
